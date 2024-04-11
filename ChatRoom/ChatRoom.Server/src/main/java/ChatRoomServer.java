@@ -1,58 +1,63 @@
 import java.io.*;
+import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Scanner;
 
-public class ChatRoomClient {
+public class ChatRoomServer {
     private String name;
     private String ip;
     private int port;
+    private ServerSocket serverSocket;
     private Socket clientSocket;
     private PrintWriter outputStream;
     private BufferedReader inputStream;
 
-    public ChatRoomClient() {
+    public ChatRoomServer() {
     }
 
-    public void startConnection() {
+    public void startServer() {
         try {
-            clientSocket = new Socket(getIp(),getPort());
+            serverSocket = new ServerSocket(getPort());
+
+            clientSocket = serverSocket.accept();
 
             inputStream = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
             outputStream = new PrintWriter(clientSocket.getOutputStream(),true);
+
+
         } catch (IOException e) {
-            // TODO: Add exception handle for network connectivity error
+            // TODO: Add exception handle for server connectivity issues
         }
     }
 
-    public void stopConnection() {
+    public void stopServer() {
         try {
-            clientSocket.close();
             inputStream.close();
             outputStream.close();
+            clientSocket.close();
+            serverSocket.close();
         } catch (IOException e) {
-            // TODO: Add exception handle for closing network socket
+            // TODO: Add exception handle for close server socket
         }
-
     }
 
-    public void sendMessage(String message) {
-        String serverMessage;
-
-        outputStream.println(message);
-
+    public void HandleUserInput() {
+        String clientMessage;
         try {
-            serverMessage = inputStream.readLine();
+            clientMessage = inputStream.readLine();
 
-            receiveMessage(serverMessage);
+            System.out.println("Client :" + clientMessage);
+
+            broadcastMessage("Server received: \"" + clientMessage + "\"");
 
         } catch (IOException e) {
-            // TODO: Add exception handle for server side broadcast
+            // TODO: Add exception handle for client side message
         }
+
     }
 
-    public void receiveMessage(String message) {
-        System.out.println(message);
+    public void broadcastMessage(String message) {
+        outputStream.println(message);
     }
 
     public String getName() {
@@ -79,6 +84,14 @@ public class ChatRoomClient {
         this.port = port;
     }
 
+    public ServerSocket getServerSocket() {
+        return serverSocket;
+    }
+
+    public void setServerSocket(ServerSocket serverSocket) {
+        this.serverSocket = serverSocket;
+    }
+
     public Socket getClientSocket() {
         return clientSocket;
     }
@@ -103,20 +116,14 @@ public class ChatRoomClient {
         this.inputStream = inputStream;
     }
 
-
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
+        ChatRoomServer server = new ChatRoomServer();
 
-        ChatRoomClient client = new ChatRoomClient();
+        server.setPort(6666);
+        server.startServer();
 
-        client.setName("Client 1");
-        client.setIp("127.0.0.1");
-        client.setPort(6666);
-
-        client.startConnection();
-
-        while(true) {
-            client.sendMessage(scanner.nextLine());
+        while (true) {
+            server.HandleUserInput();
         }
     }
 }
