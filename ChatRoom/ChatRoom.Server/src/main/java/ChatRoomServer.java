@@ -1,6 +1,10 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.Time;
+import java.text.ParseException;
+import java.text.ParsePosition;
+import java.time.LocalDateTime;
 
 public class ChatRoomServer {
     private String name;
@@ -41,19 +45,64 @@ public class ChatRoomServer {
         }
     }
 
-    public void HandleUserInput() {
-        String clientMessage;
+    public String receiveMessage() {
+        String clientMessage = null;
         try {
             clientMessage = inputStream.readLine();
 
             System.out.println("Client :" + clientMessage);
 
-            broadcastMessage("Server received: \"" + clientMessage + "\"");
-
         } catch (IOException e) {
             // TODO: Add exception handle for client side message
         }
+        return clientMessage;
+    }
 
+    public void handleClientInput(String clientMessage) {
+        int parsedMessage = Integer.parseInt(clientMessage);
+        // TODO: Add parse exception
+        // TODO: Fix new line
+        switch (parsedMessage) {
+            case 1: {
+                broadcastMessage("The time is " + LocalDateTime.now());
+
+                break;
+            }
+
+            case 2: {
+                broadcastMessage("id,first_name,last_name,email,gender,ip_address\n" +
+                        "1,Bertie,Boxell,bboxell0@people.com.cn,Male,53.161.222.126\n" +
+                        "2,Rice,Ashmore,rashmore1@about.com,Male,160.254.167.201\n" +
+                        "3,Karrie,Stirzaker,kstirzaker2@noaa.gov,Female,36.190.240.204");
+
+                break;
+            }
+
+            case 3: {
+                broadcastMessage("Server is stopping");
+
+                stopServer();
+
+                break;
+            }
+        }
+    }
+
+    public void onClientConnect() {
+        broadcastMessage("Hello, welcome to " + getName() + " Server!" +
+        "You can do the following things:" +
+        "1. Get server current time" +
+        "2. Get example account data" +
+        "3. Stop server");
+    }
+
+    public boolean clientIsConnected() {
+        if (clientSocket.isConnected())
+        {
+            return true;
+        }
+        clientIsConnected();
+        return false;
     }
 
     public void broadcastMessage(String message) {
@@ -122,8 +171,12 @@ public class ChatRoomServer {
         server.setPort(6666);
         server.startServer();
 
+        if (server.clientIsConnected()) {
+            server.onClientConnect();
+        }
+
         while (true) {
-            server.HandleUserInput();
+            server.handleClientInput(server.receiveMessage());
         }
     }
 }

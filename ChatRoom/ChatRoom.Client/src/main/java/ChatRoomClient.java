@@ -55,6 +55,14 @@ public class ChatRoomClient {
         System.out.println(message);
     }
 
+    public void receiveMessage() {
+        try {
+            System.out.println(inputStream.readLine());
+        } catch (IOException e) {
+            // TODO: Add exception handle for server side broadcast
+        }
+    }
+
     public String getName() {
         return name;
     }
@@ -114,6 +122,8 @@ public class ChatRoomClient {
         client.setPort(6666);
 
         client.startConnection();
+
+        client.receiveMessage();
 
         while(true) {
             client.sendMessage(scanner.nextLine());
